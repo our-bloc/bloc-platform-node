@@ -29,7 +29,43 @@
         </div> -->
 
       </div>
-    </header>
+    </header><br>
+
+    <!-- Show the add resume form style="display:none"-->
+    <section hidden id="add-resume">
+      Resume Form
+      <form id="resume-form" action="#">
+        <div>
+          <input id="resume-fname" placeholder="First Name">
+        </div><br>
+        <div>
+          <input id="resume-lname" placeholder="Last Name">
+        </div><br>
+        <div>
+          <input id="resume-hometown" placeholder="Hometown">
+        </div><br>
+        <div>
+          <input id="resume-advisor" placeholder="Advisor's Name">
+        </div><br>
+        <div>
+          <input id="resume-year" placeholder="Year">
+        </div><br>
+        <div>
+          <input id="resume-type" placeholder="Type">
+        </div><br>
+        <div>
+          <input id="resume-linkedinURL" placeholder="LinkedIn URL">
+        </div><br>
+        <button type="submit">Add Resume</button>
+      </form>
+    </section>
+
+    <!-- Show resume -->
+    <section hidden id="view-resume">
+      <div class="resume-container">
+
+      </div>
+    </section>
 
     <!-- Firebase: bottom of HTML or BEFORE other script tags -->
     <script src="https://www.gstatic.com/firebasejs/3.2.1/firebase.js"></script>
