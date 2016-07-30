@@ -5,7 +5,32 @@
     <link rel='stylesheet' href='/stylesheets/style.css'/>
   </head>
   <body>
-    <h1>Hi!</h1>
+    <h1>Hi! Welcome to BLOC.</h1>
+
+    <header>
+      <div id="user-container">
+        <div hidden id="user-name"></div>
+
+        <div class="google-auth">
+          <button hidden id="google-sign-out">Sign-out</button>
+          <button id="google-sign-in">Sign-in with Google</button>
+        </div>
+
+        <!-- TODO: register app using BLOC's fb acct info -->
+        <!-- <div class="fb-auth">
+          <fb:login-button data-auto-logout-link="true" scope="public_profile,email" size="large"></fb:login-button>
+        </div> -->
+
+        <!-- <div class="email-auth">
+          <input type="text" id="email" name="email" placeholder="Email">
+          <input type="password" id="email-password" name="password" placeholder="Password">
+          <button disabled="" id="email-sign-in">Sign In</button>
+          <button id="email-sign-up" name="signup">Sign Up</button>
+        </div> -->
+
+      </div>
+    </header>
+
     <!-- Firebase: bottom of HTML or BEFORE other script tags -->
     <script src="https://www.gstatic.com/firebasejs/3.2.1/firebase.js"></script>
     <script>
@@ -18,5 +43,8 @@
       };
       firebase.initializeApp(config);
     </script>
+    <!-- other scripts -->
+    <script src="/javascripts/main.js"></script>
+
   </body>
 </html>
