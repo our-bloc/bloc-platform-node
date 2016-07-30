@@ -55,16 +55,26 @@ BlocApp.prototype.signOut = function() {
   this.auth.signOut();
 };
 
+// Writes the user's data to the database
+function writeUserData(userId, name, email) {
+  firebase.database().ref('users/' + userId).set({
+    username: name,
+    email: email
+  });
+};
+
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 BlocApp.prototype.onAuthStateChanged = function(user) {
   if (user) { // User is signed in!
     // Set user's profile name, show sign out btn & hide sign in btn.
-    var userName = user.displayName;
+    var userName = 'Hi ' + user.displayName + '!';
     this.userName.textContent = userName;
     this.userName.removeAttribute('hidden');
     this.googleSignOutButton.removeAttribute('hidden');
     this.googleSignInButton.setAttribute('hidden', 'true');
     console.log(userName + ' signed in!');
+    writeUserData(user.uid, user.displayName, user.email);
+    console.log(userName + '\'s information has been stored.');
   } else {
     // Hide user's profile and sign out button / show sign in button.
     this.userName.setAttribute('hidden', 'true');
