@@ -67,8 +67,8 @@ function writeUserData(userId, name, email) {
 BlocApp.prototype.onAuthStateChanged = function(user) {
   if (user) { // User is signed in!
     // Set user's profile name, show sign out btn & hide sign in btn.
-    var userName = 'Hi ' + user.displayName + '!';
-    this.userName.textContent = userName;
+    var userName = user.displayName ;
+    this.userName.textContent = 'Hi ' + userName + '!';
     this.userName.removeAttribute('hidden');
     this.googleSignOutButton.removeAttribute('hidden');
     this.googleSignInButton.setAttribute('hidden', 'true');
