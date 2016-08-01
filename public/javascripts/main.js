@@ -20,20 +20,30 @@ function BlocApp() {
   this.checkSetup();
 
   // Shortcuts to DOM Elements.
+  this.resumeContainer = document.getElementById('resume-container');
+  this.resumeForm = document.getElementById('resume-form');
+  this.resumeFnameInput = document.getElementById('resume-fname');
+  this.resumeLnameInput = document.getElementById('resume-lname');
+  this.resumeHometownInput = document.getElementById('resume-hometown');
+  this.resumeAdvisorInput = document.getElementById('resume-advisor');
+  this.resumeYearInput = document.getElementById('resume-year');
+  this.resumeTypeInput = document.getElementById('resume-type');
+  this.resumeLinkedinurlInput = document.getElementById('resume-linkedinURL');
+  this.submitButton = document.getElementById('submit');
+  this.resume = document.getElementById('resume');
   this.userName = document.getElementById('user-name');
   this.googleSignInButton = document.getElementById('google-sign-in');
   this.googleSignOutButton = document.getElementById('google-sign-out');
-  this.addResume = document.getElementById('add-resume');
-  this.resumeForm = document.getElementById('resume-form');
-
-  // this.viewResume = document.getElementById('view-resume');
 
   // Saves resume on form submit.
+  this.resumeForm.addEventListener('submit', this.saveResume.bind(this));
+
+  // Adds listener to sign in and out buttons.
   this.googleSignOutButton.addEventListener('click', this.signOut.bind(this));
   this.googleSignInButton.addEventListener('click', this.signIn.bind(this));
 
   this.initFirebase();
-}
+};
 
 // Sets up shortcuts to Firebase features and initiates firebase auth.
 BlocApp.prototype.initFirebase = function() {
@@ -53,82 +63,49 @@ BlocApp.prototype.writeUserData = function(userId, name, email) {
   });
 };
 
-// Writes the user's resume data to the database
-BlocApp.prototype.writeNewResume = function(uid, username, fname, lname, hometown, advisorName, year, type, linkedinURL) {
-  // A resume entry.
+// Loads most recent resume and listens for upcoming ones.
+BlocApp.prototype.loadResume = function(userId) {
+  // Reference to the /resumes/ database path.
+  this.resumesRef = this.database.ref('resumes');
+  // Make sure we remove all previous listeners.
+  this.resumesRef.off();
+
+  // Loads the last resume and listen for new ones.
+  var setResume = function(data) {
+    var val = data.val();
+    this.displayResume(data.key, val.name, val.fname, val.lname, val.hometown, val.advisor, val.year, val.type, val.linkedinURL);
+  }.bind(this);
+  this.resumesRef.limitToLast(1).on('child_added', setResume);
+};
+
+// Saves a new resume on the Firebase DB under 'resumes' & 'user/:uid/resume-copies'
+BlocApp.prototype.saveResume = function(e) {
+  e.preventDefault();
+  // Check that the user entered a resume and is signed in.
+  var currentUser = this.auth.currentUser;
+
   var resumeData = {
-    author: username,
-    uid: uid,
-    fname: fname,
-    lname: lname,
-    hometown: hometown,
-    advisorName: advisorName,
-    year: year,
-    type: type,
-    linkedinURL: linkedinURL
+    name: currentUser.displayName,
+    email: currentUser.email,
+    fname: this.resumeFnameInput.value,
+    lname: this.resumeLnameInput.value,
+    hometown: this.resumeHometownInput.value,
+    advisor: this.resumeAdvisorInput.value,
+    year: this.resumeYearInput.value,
+    type: this.resumeTypeInput.value,
+    linkedinURL: this.resumeLinkedinurlInput.value
   };
 
-  // Get a key for a new Resume.
+  // Get a key for a new resume.
   var newResumeKey = firebase.database().ref().child('resumes').push().key;
 
   // Write the new resume's data simultaneously in the resumes list and the user's resume list.
   var updates = {};
   updates['/resumes/' + newResumeKey] = resumeData;
-  updates['/user-resumes/' + uid + '/' + newResumeKey] = resumeData;
+  updates['/users/' + currentUser.uid + '/resume-copies' + newResumeKey] = resumeData;
 
   return firebase.database().ref().update(updates);
-};
-
-// Creates a resume elements
-BlocApp.prototype.createResumeElement = function(resumeId, author, authorID, username, fname, lname, hometown, advisorName, year, type, linkedinURL) {
-  var uid = firebase.auth().currentUser.uid;
-
-  var html =
-      '<div class="resume">' +
-        '<div class="resume-username"></div>' +
-        '<div class="resume-fname"></div>' +
-        '<div class="resume-lname"></div>' +
-        '<div class="resume-hometown"></div>' +
-        '<div class="resume-advisor"></div>' +
-        '<div class="resume-year"></div>' +
-        '<div class="resume-type"></div>' +
-        '<div class="resume-linkedinURL"></div>' +
-      '</div>';
-
-  // Create the DOM element from the HTML.
-  var div = document.createElement('div');
-  div.innerHTML = html;
-
-  // Set values.
-  resumeElement.getElementsByClassName('resume-username')[0].innerText = author || 'Anonymous';
-  resumeElement.getElementsByClassName('resume-fname')[0].innerText = fname;
-  resumeElement.getElementsByClassName('resume-lname')[0].innerText = lname;
-  resumeElement.getElementsByClassName('resume-hometown')[0].innerText = hometown;
-  resumeElement.getElementsByClassName('resume-advisor')[0].innerText = advisor;
-  resumeElement.getElementsByClassName('resume-year')[0].innerText = year;
-  resumeElement.getElementsByClassName('resume-type')[0].innerText = type;
-  resumeElement.getElementsByClassName('resume-linkedinURL')[0].innerText = linkedinURL;
-
-  return resumeElement;
-};
-
-// Starts listening for new resumes.
-BlocApp.prototype.startDatabaseQuery = function() {
-  var myUserId = firebase.auth().currentUser.uid;
-
-  var userResumesRef = firebase.database().ref('user-resumes/' + myUserId);
-
-  var fetchResumes = function(resumesRef, sectionElement) {
-    resumesRef.on('child_added', function(data) {
-      var author = data.val().author || 'Anonymous';
-      var containerElement = sectionElement.getElementsByClassName('resume-container')[0];
-      containerElement.insertBefore(
-          createresumeElement(data.key, data.val().title, data.val().body, author, data.val().uid, data.val().authorPic),
-          containerElement.firstChild);
-    });
-  };
-
-  fetchResumes(userResumesRef, userResumesSection);
+  console.log(this.resumeFnameInput.value +'\'s resume successfully written to db');
 };
 
 // Signs-in Bloc App.
@@ -147,46 +124,31 @@ BlocApp.prototype.signOut = function() {
 // Triggers when the auth state change for instance when the user signs-in or signs-out.
 BlocApp.prototype.onAuthStateChanged = function(user) {
   if (user) { // User is signed in!
-    // Set user's profile name, show sign out btn & hide sign in btn.
+    // Set user's profile name / show resume-container & sign out btn / hide sign in btn.
     var userName = user.displayName ;
     this.userName.textContent = 'Hi ' + userName + '!';
     this.userName.removeAttribute('hidden');
+    this.resumeContainer.removeAttribute('hidden');
     this.googleSignOutButton.removeAttribute('hidden');
     this.googleSignInButton.setAttribute('hidden', 'true');
-    this.addResume.removeAttribute('hidden');
+
+    // We load currently existing resume.
+    this.loadResume();
 
     // store info
     this.writeUserData(user.uid, user.displayName, user.email);
-    console.log(userName + ' signed in & their information has been stored.');
-
-    // find resume
-    this.startDatabaseQuery();
-    console.log(username + '\'s resume found!');
-
+    console.log(userName + ' signed in.');
   } else {
-    // Hide user's profile/resume form and sign out button / show sign in button.
+    // Hide user's profile, resume, and sign out button / show sign in button.
     this.userName.setAttribute('hidden', 'true');
+    this.resumeContainer.setAttribute('hidden', 'true');
     this.googleSignOutButton.setAttribute('hidden', 'true');
     this.googleSignInButton.removeAttribute('hidden');
-    this.addResume.setAttribute('hidden', 'true');
-    console.log('User signed out!');
-  }
+  };
 };
 
-// Saves resume on form submit.
-// BlocApp.prototype.resumeForm.onsubmit = function(e) {
-//    e.preventDefault();
-//    var userId = firebase.auth().currentUser.uid;
-//    firebase.database().ref('/users/' + userId).then(function(snapshot) {
-//      var username = snapshot.val().username;
-//      writeNewResume(firebase.auth().currentUser.uid, firebase.auth().currentUser.displayName).then(function() {
-//        myResumesMenuButton.click();
-//      });
-//    });
-//  };
-
 // Returns true if user is signed-in. Otherwise false and displays a resume.
-BlocApp.prototype.checkSignedInWithresume = function() {
+BlocApp.prototype.checkSignedInWithResume = function() {
   // Return true if the user is signed in Firebase
   if (this.auth.currentUser) {
     return true;
@@ -194,6 +156,39 @@ BlocApp.prototype.checkSignedInWithresume = function() {
   } else {
     window.alert('User is not signed in.');
   }
+};
+
+// Returns resume submission.
+BlocApp.prototype.displayResume = function(key, name, fname, lname, hometown, advisor, year, type, linkedinURL) {
+  var uid = firebase.auth().currentUser.uid;
+
+  var resumeTemplate =
+      '<div class="resume-filler" style="float: right;">' +
+        '<h3>Resume</h3>' +
+        '<div class="res fname"></div>' +
+        '<div class="res lname"></div>' +
+        '<div class="res hometown"></div>' +
+        '<div class="res advisor"></div>' +
+        '<div class="res year"></div>' +
+        '<div class="res type"></div>' +
+        '<div class="res linkedinURL"></div>' +
+      '</div>';
+
+  // Create the DOM element from the HTML.
+  var div = document.createElement('div');
+  div.innerHTML = resumeTemplate;
+  var resumeElement = div.firstChild;
+  this.resume.appendChild(div);
+
+  resumeElement.getElementsByClassName('fname')[0].innerText = "First Name: " + fname;
+  resumeElement.getElementsByClassName('lname')[0].innerText = "Last Name: " + lname;
+  resumeElement.getElementsByClassName('hometown')[0].innerText = "Hometown: " + hometown;
+  resumeElement.getElementsByClassName('advisor')[0].innerText = "Advisor: " + advisor;
+  resumeElement.getElementsByClassName('year')[0].innerText = "Year: " + year;
+  resumeElement.getElementsByClassName('type')[0].innerText = "Type: " + type;
+  resumeElement.getElementsByClassName('linkedinURL')[0].innerText = "LinkedIn URL: " + linkedinURL;
+
+  return resumeElement;
 };
 
 // Checks that the Firebase SDK has been correctly setup and configured.

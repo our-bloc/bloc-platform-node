@@ -32,9 +32,11 @@
     </header><br>
 
     <!-- Show the add resume form style="display:none"-->
-    <section hidden id="add-resume">
-      Resume Form
-      <form id="resume-form" action="#">
+    <section hidden id="resume-container">
+      <!-- on click: displays resume form -->
+      <!-- <button id="add-resume" disabled type=""></button> -->
+      <!-- displays resume form fields -->
+      <form id="resume-form" action="#" style="float: left;">
         <div>
           <input id="resume-fname" placeholder="First Name">
         </div><br>
@@ -56,13 +58,10 @@
         <div>
           <input id="resume-linkedinURL" placeholder="LinkedIn URL">
         </div><br>
-        <button type="submit">Add Resume</button>
+        <button id="submit" type="submit">Submit Resume</button>
       </form>
-    </section>
-
-    <!-- Show resume -->
-    <section hidden id="view-resume">
-      <div class="resume-container">
+      <!-- displays most recent copy of resume -->
+      <div id="resume">
 
       </div>
     </section>
