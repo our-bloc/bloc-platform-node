@@ -65,8 +65,27 @@ BlocApp.prototype.writeUserData = function(userId, name, email) {
 
 // Loads most recent resume and listens for upcoming ones.
 BlocApp.prototype.loadResume = function(userId) {
-  // Reference to the /resumes/ database path.
+	// Reference to the /resume-copies database path.
+	var uid = firebase.auth().currentUser.uid;
+
+	// solution 1 - borrowed from lines 118-120
+	// var updates = {};
+	// updates['/users/' + currentUser.uid + '/resume-copies'];
+	// return firebase.database().ref().update(updates);
+
+	// solution 2 - http://stackoverflow.com/questions/35446695/firebase-deep-query-orderbychild-with-equalto
+	// this.usersRef = this.ref.child('users');
+	// this.currentUserRef = this.usersRef.child(this.uid);
+	// this.copiesRef = this.currentUserRef.child('resume-copies';
+	// this.resumesRef = this.database.ref(this.copiesRef);
+
+	// solution 3 - borrowed from line 60
+	// this.resumesRef = this.database.ref('resumes/' + this.uid + '/resume-copies');
+	// console.log('Hit ../uid/resume-copies');
+
+  // Current Solution - reference to the /resumes/ database path.
   this.resumesRef = this.database.ref('resumes');
+	console.log('Hit /resumes');
   // Make sure we remove all previous listeners.
   this.resumesRef.off();
 
@@ -76,6 +95,7 @@ BlocApp.prototype.loadResume = function(userId) {
     this.displayResume(data.key, val.name, val.fname, val.lname, val.hometown, val.advisor, val.year, val.type, val.linkedinURL);
   }.bind(this);
   this.resumesRef.limitToLast(1).on('child_added', setResume);
+	console.log('Completed loadResume');
 };
 
 // Saves a new resume on the Firebase DB under 'resumes' & 'user/:uid/resume-copies'
